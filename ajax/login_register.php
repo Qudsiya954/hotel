@@ -56,48 +56,31 @@ if (isset($_POST['register'])) {
 }
 
 
+if (isset($_POST['login'])) {
+    $data = filteration($_POST);
+    $u_exist = select("SELECT * FROM `user_cred` WHERE `email`=? OR `phonenum`=? LIMIT 1", 
+    [$data['email_mob'], $data['email_mob']], "ss");
 
+    if (mysqli_num_rows($u_exist) == 0) {
 
-if (isset($_POST['profile-form'])) {
-    session_start();
-    
-    if (!isset($_SESSION['uId'])) {
-        echo 'session_error';
-        exit;
-    }
-
-    $img = uploadUserImage($_FILES['profile']);
-    if ($img == 'inv_img') {
-        echo 'Invalid Image';
-        exit;
-    } else if ($img == 'upd_failed') {
-        echo 'Upload Failed';
-        exit;
-    }
-
-    // Check if user exists before fetching data
-    $u_exist = select("SELECT `profile` FROM `user_cred` WHERE `id`=?", [$_SESSION['uId']], "s");
-
-    if (!$u_exist) {
-        echo 'user_not_found';
-        exit;
-    }
-
-    if (mysqli_num_rows($u_exist) != 0) {
-        $u_fetch = mysqli_fetch_assoc($u_exist);
-        deleteImage($u_fetch['profile'], USER_FOLDER);
-    }
-
-    $query = "UPDATE `user_cred` SET `profile`=? WHERE `id`=?";
-    $values = [$img, $_SESSION['uId']];
-
-    if (update($query, $values, "ss")) {
-        $_SESSION['uPic'] = $img;
-        echo 'success';
+        echo 'inv_email_mob';
+        
     } else {
-        echo 'error';
+        $u_fetch = mysqli_fetch_assoc($u_exist);
+        if($u_fetch['status'] == 0) {
+            echo 'inactive';
+        } else {
+            if(!password_verify($data['pass'], $u_fetch['password'])) {
+               echo 'invalid_pass';
+            } else {
+                session_start();
+                $_SESSION['login'] = true;
+                $_SESSION['uId'] = $u_fetch['id'];
+                $_SESSION['uName'] = $u_fetch['name'];
+                $_SESSION['uPic'] = $u_fetch['profile'];
+                $_SESSION['uPhone'] = $u_fetch['phonenum'];
+                echo 1;
+            }
+        }
     }
 }
-
-
-?>
