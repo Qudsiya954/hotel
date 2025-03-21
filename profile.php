@@ -76,7 +76,7 @@
                 <div class="bg-white p-3 rounded p-md-4 shadow-sm">
                     <form id="profile-form">
                         <h5 class="mb-3 fw-bold">Picture</h5>
-                        <img src="<?php echo USER_IMG_PATH . $u_fetch['profile']; ?>" class="img-fluid">
+                        <img src="<?php echo USER_IMG_PATH . $u_fetch['profile']; ?>" class="img-fluid " >
                         <label class="form-label"> New Picture</label>
                         <input type="file" name="profile" accept=".jpg, .jpeg, .png, .webp" class="form-control shadow-none" required>
                         <br>
@@ -119,32 +119,45 @@
             xhr.send(data)
         })
 
-        let profile_form = document.getElementById('profile-form')
-        profile_form.addEventListener('submit', function(e) {
-            e.preventDefault()
-            let data = new FormData
-            data.append('profile-form', '')
-            data.append('profile', profile_form.elements['profile'].flies[0])
+        let profile_form = document.getElementById('profile-form');
 
+        profile_form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            let data = new FormData(profile_form); // Automatically collects form fields
+            data.append('profile-form', ''); // Ensure form submission flag
+
+            let fileInput = profile_form.elements['profile'];
+            if (fileInput.files.length === 0) {
+                alert("Please select a file to upload.");
+                return;
+            }
+
+            data.append('profile', fileInput.files[0]); // Corrected `.flies` to `.files`
 
             let xhr = new XMLHttpRequest();
             xhr.open('POST', 'ajax/profile.php', true);
 
             xhr.onload = function() {
+                console.log("Response:", this.responseText); // Debugging response
+
                 if (this.responseText === 'inv_image') {
-                    alert('error', "Only jpeg, jpg, webp images allowed")
+                    alert("Only jpeg, jpg, webp images allowed");
                 } else if (this.responseText === 'upd_failed') {
-                    alert('error', "Failed to upload image")
-                } else if (this.responseText == 0) {
-                    alert('error', 'No Updation Made')
+                    alert("Failed to upload image");
+                } else if (this.responseText === '0') { // Ensure it's compared correctly
+                    alert("No Updation Made");
                 } else {
                     window.location.href = window.location.pathname;
                 }
-
-
             };
-            xhr.send(data)
-        })
+
+            xhr.onerror = function() {
+                alert("An error occurred while uploading.");
+            };
+
+            xhr.send(data);
+        });
     </script>
 
 </body>

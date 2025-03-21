@@ -58,40 +58,46 @@ if (isset($_POST['register'])) {
 
 
 
-if (isset($_POST['login'])) {
-    session_start(); // This session is necessary
-    $data = filteration($_POST);
-
-    // Check if user exists
-    $query = "SELECT * FROM `user_cred` WHERE `email`=? OR `phonenum`=? LIMIT 1";
-    $u_exist = select($query, [$data['email_mob'], $data['email_mob']], "ss");
-
-    if (mysqli_num_rows($u_exist) == 0) {
-        echo 'inv_email_mob';  // User not found
+if (isset($_POST['profile-form'])) {
+    session_start();
+    
+    if (!isset($_SESSION['uId'])) {
+        echo 'session_error';
         exit;
     }
 
-    $u_fetch = mysqli_fetch_assoc($u_exist);
-    error_log("Fetched User Data: " . print_r($u_fetch, true)); // Debug log
-
-    if ($u_fetch['status'] == 0) {
-        echo 'inactive';  // Account suspended
+    $img = uploadUserImage($_FILES['profile']);
+    if ($img == 'inv_img') {
+        echo 'Invalid Image';
+        exit;
+    } else if ($img == 'upd_failed') {
+        echo 'Upload Failed';
         exit;
     }
 
-    if (!password_verify($data['pass'], $u_fetch['password'])) {
-        echo 'invalid password';  // Incorrect password
+    // Check if user exists before fetching data
+    $u_exist = select("SELECT `profile` FROM `user_cred` WHERE `id`=?", [$_SESSION['uId']], "s");
+
+    if (!$u_exist) {
+        echo 'user_not_found';
         exit;
+    }
+
+    if (mysqli_num_rows($u_exist) != 0) {
+        $u_fetch = mysqli_fetch_assoc($u_exist);
+        deleteImage($u_fetch['profile'], USER_FOLDER);
+    }
+
+    $query = "UPDATE `user_cred` SET `profile`=? WHERE `id`=?";
+    $values = [$img, $_SESSION['uId']];
+
+    if (update($query, $values, "ss")) {
+        $_SESSION['uPic'] = $img;
+        echo 'success';
     } else {
-        $_SESSION['login'] = true;
-        $_SESSION['uId'] = $u_fetch['id'];
-        $_SESSION['uName'] = $u_fetch['name'];
-        $_SESSION['uPic'] = isset($u_fetch['profile']) ? $u_fetch['profile'] : 'default.jpg'; // Set a default if empty
-        $_SESSION['uPhone'] = $u_fetch['phonenum'];
-
-        error_log("Session Set: " . print_r($_SESSION, true)); // Log session data
-        echo '1';  // Success
+        echo 'error';
     }
 }
+
 
 ?>
