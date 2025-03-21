@@ -24,6 +24,8 @@ if (isset($_POST['info-form'])) {
         echo 'error';
     }
 }
+
+
 if (isset($_POST['profile-form'])) {
     session_start();
     $img = uploadUserImage($_FILES['profile']);
