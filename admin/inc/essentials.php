@@ -5,6 +5,8 @@ define('SITE_URL', 'http://127.0.0.1/hbwebsite');
 define('ABOUT_IMG_PATH', SITE_URL . '/images/about/');
 define('CAROUSEL_IMG_PATH', SITE_URL . '/images/carousel/');
 define('USER_IMG_PATH', SITE_URL . '/images/users/');
+define('FACILITIES_IMG_PATH', SITE_URL . '/images/facilities/');
+
 
 // api key
 
@@ -16,6 +18,8 @@ define('UPLOAD_IMAGE_PATH', $_SERVER['DOCUMENT_ROOT'] . '/hbwebsite/images/');
 define('ABOUT_FOLDER', 'about/');
 define('CAROUSEL_FOLDER', 'carousel/');
 define('USER_FOLDER', 'users/');
+define('FACILITIES_FOLDER', 'facilities/');
+
 
 function adminLogin()
 {
@@ -104,4 +108,24 @@ function uploadUserImage($image)
     }
 }
 
+function uploadSvgImage($images, $folder)
+{
+    $valid_mine = ['image/svg+xml'];
+    $img_mine = $images['type'];
+
+    if (!in_array($img_mine, $valid_mine)) {
+        return 'inv_image';
+    } else if (($images['size'] / (1024 * 1024)) > 1) {
+        return 'inv_size';
+    } else {
+        $ext = pathinfo($images['name'], PATHINFO_EXTENSION);
+        $rname = 'IMG' . random_int(11111, 99999) . ".$ext";
+        $img_path = UPLOAD_IMAGE_PATH . $folder . $rname;
+        if (move_uploaded_file($images['tmp_name'], $img_path)) {
+            return $rname;
+        } else {
+            return 'inv_upload';
+        }
+    }
+}
 
